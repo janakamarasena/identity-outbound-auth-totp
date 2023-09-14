@@ -37,6 +37,9 @@ import org.wso2.carbon.identity.application.authentication.framework.exception.L
 import org.wso2.carbon.identity.application.authentication.framework.exception.UserIdNotFoundException;
 import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatedUser;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatorData;
+import org.wso2.carbon.identity.application.authentication.framework.model.AuthenticatorParamMetadata;
+import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkUtils;
 import org.wso2.carbon.identity.application.authenticator.totp.exception.TOTPException;
 import org.wso2.carbon.identity.application.authenticator.totp.internal.TOTPDataHolder;
@@ -65,7 +68,9 @@ import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -1247,5 +1252,29 @@ public class TOTPAuthenticator extends AbstractApplicationAuthenticator
             log.debug("Error while getting the user id from the authenticated user.", e);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<AuthenticatorData> getAuthInitiationData(AuthenticationContext context) {
+
+        AuthenticatorData authenticatorData = new AuthenticatorData();
+        authenticatorData.setName(getName());
+        authenticatorData.setDisplayName(getFriendlyName());
+        String idpName = context.getExternalIdP().getIdPName();
+        authenticatorData.setIdp(idpName);
+
+        List<AuthenticatorParamMetadata> authenticatorParamMetadataList = new ArrayList<>();
+        AuthenticatorParamMetadata tokenMetadata = new AuthenticatorParamMetadata(
+                TOTPAuthenticatorConstants.TOKEN, FrameworkConstants.AuthenticatorParamType.INTEGER, 0);
+        authenticatorParamMetadataList.add(tokenMetadata);
+
+        authenticatorData.setAuthParams(authenticatorParamMetadataList);
+        return Optional.of(authenticatorData);
+    }
+
+    @Override
+    public boolean isAPIBasedAuthenticationSupported() {
+
+        return true;
     }
 }
